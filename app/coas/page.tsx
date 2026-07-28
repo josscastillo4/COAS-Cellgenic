@@ -1,18 +1,10 @@
-import { FileText } from "lucide-react";
-import PageContainer from "@/components/PageContainer";
-import EmptyStateCard from "@/components/EmptyStateCard";
+import { redirect } from "next/navigation";
 
+/**
+ * The "COAs" section was renamed to "Documents" (see /app/documents).
+ * This route is kept only so old links/bookmarks to /coas don't 404 —
+ * it immediately redirects to the new Documents module.
+ */
 export default function CoasPage() {
-  return (
-    <PageContainer
-      title="Certificates of Analysis"
-      description="View, upload, and manage COAs for every Cellgenic product batch."
-    >
-      <EmptyStateCard
-        icon={FileText}
-        title="No COAs yet"
-        description="Uploaded Certificates of Analysis will be listed here once the feature is built."
-      />
-    </PageContainer>
-  );
+  redirect("/documents");
 }

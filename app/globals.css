@@ -1,16 +1,27 @@
 @import "tailwindcss";
 
-html,
-body {
-  margin: 0;
-  padding: 0;
-  background: #020617;
-  color: #ffffff;
-  font-family: Arial, Helvetica, sans-serif;
+:root {
+  --background: #020617;
+  --foreground: #ffffff;
+  --card: #0f172a;
+  --border: #1e293b;
 }
 
 * {
   box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+  min-height: 100vh;
 }
 
 a {

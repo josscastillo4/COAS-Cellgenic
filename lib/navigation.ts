@@ -13,7 +13,7 @@ import type { NavItem } from "@/types/navigation";
  */
 export const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "COAs", href: "/coas", icon: FileText },
+  { label: "Documents", href: "/documents", icon: FileText },
   { label: "Products", href: "/products", icon: Package },
   { label: "Users", href: "/users", icon: Users },
   { label: "Settings", href: "/settings", icon: Settings },
