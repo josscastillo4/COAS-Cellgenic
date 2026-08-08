@@ -18,6 +18,7 @@ const DOCUMENT_TYPES: Array<DocumentType | "All"> = [
   "MSDS",
   "IFU",
   "Brochure",
+  "Package Insert",
 ];
 
 const DOCUMENT_STATUSES: Array<DocumentStatus | "All"> = [

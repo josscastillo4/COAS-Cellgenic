@@ -115,4 +115,13 @@ export const MOCK_DOCUMENTS: ProductDocument[] = [
     status: "Draft",
     updated: "2026-07-26",
   },
+  {
+    id: "doc-013",
+    name: "Package Insert - PurityMax Trypsin-EDTA",
+    type: "Package Insert",
+    product: "PurityMax Trypsin-EDTA",
+    version: "v1.0",
+    status: "Active",
+    updated: "2026-07-30",
+  },
 ];

@@ -4,7 +4,7 @@
  * not app chrome.
  */
 
-export type DocumentType = "COA" | "MSDS" | "IFU" | "Brochure";
+export type DocumentType = "COA" | "MSDS" | "IFU" | "Brochure" | "Package Insert";
 
 export type DocumentStatus = "Active" | "Archived" | "Draft";
 
