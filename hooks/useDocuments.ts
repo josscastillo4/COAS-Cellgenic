@@ -53,7 +53,7 @@ export function useDocuments() {
     const newDocument: ProductDocument = {
       type: "COA",
       status: "Draft",
-      verificationStatus: "Unverified",
+      verificationStatus: "Pending verification",
       updateRequired: false,
       ...input,
       id: generateId(),
@@ -75,7 +75,7 @@ export function useDocuments() {
     const newDocuments: ProductDocument[] = inputs.map((input) => ({
       type: "COA",
       status: "Draft",
-      verificationStatus: "Unverified",
+      verificationStatus: "Pending verification",
       updateRequired: false,
       ...input,
       id: generateId(),
@@ -111,6 +111,14 @@ export function useDocuments() {
     []
   );
 
+  const deleteDocuments = useCallback((ids: string[]) => {
+    setDocuments((prev) => {
+      const next = documentService.deleteDocuments(prev, ids);
+      saveToStorage(next);
+      return next;
+    });
+  }, []);
+
   const getDocumentById = useCallback(
     (id: string) => documentService.getDocumentById(documents, id),
     [documents]
@@ -123,6 +131,7 @@ export function useDocuments() {
     importDocuments,
     updateDocument,
     replacePdf,
+    deleteDocuments,
     getDocumentById,
   };
 }

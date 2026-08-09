@@ -2,13 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { cn, formatDate, slugify } from "@/lib/utils";
-import type {
-  DocumentInput,
-  DocumentStatus,
-  DocumentType,
-  ProductDocument,
-  VerificationStatus,
-} from "@/types/document";
+import type { DocumentInput, DocumentStatus, DocumentType, ProductDocument } from "@/types/document";
 
 interface DocumentFormProps {
   /** When provided, the form is pre-filled for editing; otherwise it's a blank create form. */
@@ -20,12 +14,6 @@ interface DocumentFormProps {
 
 const DOCUMENT_TYPES: DocumentType[] = ["COA", "MSDS", "IFU", "Brochure", "Package Insert"];
 const DOCUMENT_STATUSES: DocumentStatus[] = ["Active", "Archived", "Draft"];
-const VERIFICATION_STATUSES: VerificationStatus[] = [
-  "Verified",
-  "Mismatch",
-  "Outdated",
-  "Unverified",
-];
 
 const inputClasses =
   "w-full rounded-lg border border-slate-800 bg-slate-900 py-2 px-3 text-sm text-white placeholder:text-slate-500 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600";
@@ -57,11 +45,9 @@ export default function DocumentForm({
     initialValues?.publishedYear ? String(initialValues.publishedYear) : ""
   );
   const [lotNumber, setLotNumber] = useState(initialValues?.lotNumber ?? "");
+  const [mg, setMg] = useState(initialValues?.mg ?? "");
   const [qrUrl, setQrUrl] = useState(initialValues?.qrUrl ?? "");
   const [updateRequired, setUpdateRequired] = useState(initialValues?.updateRequired ?? false);
-  const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>(
-    initialValues?.verificationStatus ?? "Unverified"
-  );
 
   function handleNameBlur() {
     if (!slugTouched && name.trim().length > 0) {
@@ -81,9 +67,11 @@ export default function DocumentForm({
       slug: slug.trim() || undefined,
       publishedYear: publishedYear ? Number(publishedYear) : undefined,
       lotNumber: lotNumber.trim() || undefined,
+      mg: mg.trim() || undefined,
       qrUrl: qrUrl.trim() || undefined,
       updateRequired,
-      verificationStatus,
+      // verificationStatus intentionally omitted — it's never manually
+      // assigned, only set by the real verification flow.
     });
   }
 
@@ -240,6 +228,20 @@ export default function DocumentForm({
           </div>
 
           <div>
+            <label className={labelClasses} htmlFor="mg">
+              Gramaje / MG
+            </label>
+            <input
+              id="mg"
+              type="text"
+              value={mg}
+              onChange={(event) => setMg(event.target.value)}
+              placeholder="50mg"
+              className={inputClasses}
+            />
+          </div>
+
+          <div>
             <label className={labelClasses} htmlFor="qrUrl">
               QR URL
             </label>
@@ -273,23 +275,13 @@ export default function DocumentForm({
         <h2 className="mb-4 text-sm font-semibold text-white">Review flags</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className={labelClasses} htmlFor="verificationStatus">
-              Verification Status
-            </label>
-            <select
-              id="verificationStatus"
-              value={verificationStatus}
-              onChange={(event) => setVerificationStatus(event.target.value as VerificationStatus)}
-              className={inputClasses}
-            >
-              {VERIFICATION_STATUSES.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
+            <span className={labelClasses}>Verification Status</span>
+            <div className={cn(inputClasses, "cursor-not-allowed text-slate-500")}>
+              {initialValues?.verificationStatus ?? "Pending verification"}
+            </div>
             <p className="mt-1 text-xs text-slate-500">
-              Whether the currently published PDF matches this document/QR.
+              Automatically calculated by the Verify action — never manually assigned. See the
+              document page for full verification detail.
             </p>
           </div>
 

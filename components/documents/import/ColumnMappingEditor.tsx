@@ -13,8 +13,9 @@ const FIELD_LABELS: Record<keyof ExcelColumnMapping, string> = {
   publicUrl: "Public URL (Link)",
   datePublished: "Published Year (Date Published)",
   lotNumber: "Lot Number (LOT Number)",
-  qrUrl: "QR URL (QR)",
+  qrUrl: "QR URL (QR) — text fallback, embedded QR images take priority",
   updateRequired: "Update Required (ACTUALIZAR PDF)",
+  mg: "Gramaje / MG (optional)",
 };
 
 const FIELD_ORDER: Array<keyof ExcelColumnMapping> = [
@@ -24,6 +25,7 @@ const FIELD_ORDER: Array<keyof ExcelColumnMapping> = [
   "lotNumber",
   "qrUrl",
   "updateRequired",
+  "mg",
 ];
 
 const selectClasses =

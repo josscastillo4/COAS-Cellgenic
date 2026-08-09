@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MoreVertical, Eye, Pencil, FileUp, Copy } from "lucide-react";
+import { MoreVertical, Eye, Pencil, FileUp, Copy, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface DocumentActionsMenuProps {
@@ -9,6 +9,7 @@ interface DocumentActionsMenuProps {
   onView?: () => void;
   onEdit?: () => void;
   onReplacePdf?: () => void;
+  onVerify?: () => void;
   onDuplicate?: () => void;
 }
 
@@ -22,6 +23,7 @@ export default function DocumentActionsMenu({
   onView,
   onEdit,
   onReplacePdf,
+  onVerify,
   onDuplicate,
 }: DocumentActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -43,6 +45,7 @@ export default function DocumentActionsMenu({
   const items = [
     { label: "View", icon: Eye, onClick: onView },
     { label: "Edit", icon: Pencil, onClick: onEdit },
+    { label: "Verify", icon: ShieldCheck, onClick: onVerify },
     { label: "Replace PDF", icon: FileUp, onClick: onReplacePdf },
     { label: "Duplicate", icon: Copy, onClick: onDuplicate },
   ];

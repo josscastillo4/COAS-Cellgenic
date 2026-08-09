@@ -3,18 +3,35 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { ArrowLeft, FileUp, Pencil } from "lucide-react";
+import { ArrowLeft, FileUp, Pencil, ShieldCheck } from "lucide-react";
 import PageContainer from "@/components/PageContainer";
 import StatusBadge from "@/components/documents/StatusBadge";
 import UpdateRequiredBadge from "@/components/documents/UpdateRequiredBadge";
 import VerificationStatusBadge from "@/components/documents/VerificationStatusBadge";
 import ReplacePdfModal from "@/components/documents/ReplacePdfModal";
 import { useDocuments } from "@/hooks/useDocuments";
-import { formatDate } from "@/lib/utils";
+import { useVerificationRunner } from "@/hooks/useVerificationRunner";
+import { cn, formatDate } from "@/lib/utils";
+import type { VerificationFieldSnapshot } from "@/types/document";
+
+const VERIFICATION_FIELD_ORDER: Array<keyof VerificationFieldSnapshot> = [
+  "name",
+  "publishedYear",
+  "lotNumber",
+  "mg",
+];
+
+const VERIFICATION_FIELD_LABELS: Record<keyof VerificationFieldSnapshot, string> = {
+  name: "Document Name",
+  publishedYear: "Published Year",
+  lotNumber: "Lot Number",
+  mg: "Gramaje / MG",
+};
 
 export default function DocumentDetailPage() {
   const params = useParams<{ id: string }>();
-  const { getDocumentById, replacePdf, isReady } = useDocuments();
+  const { documents, getDocumentById, replacePdf, updateDocument, isReady } = useDocuments();
+  const { isRunning, run } = useVerificationRunner({ documents, isReady, updateDocument });
   const [isReplaceOpen, setIsReplaceOpen] = useState(false);
 
   if (!isReady) {
@@ -48,6 +65,7 @@ export default function DocumentDetailPage() {
     { label: "Product", value: record.product ?? "—" },
     { label: "Version", value: record.version ?? "—" },
     { label: "Lot Number", value: record.lotNumber ?? "—" },
+    { label: "Gramaje / MG", value: record.mg ?? "—" },
     { label: "Published Year", value: record.publishedYear ?? "—" },
     { label: "Public URL", value: record.publicUrl ?? "—" },
     { label: "Slug", value: record.slug ?? "—" },
@@ -84,16 +102,81 @@ export default function DocumentDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="rounded-xl border border-slate-800 bg-slate-900 p-6 lg:col-span-2">
-          <h2 className="mb-4 text-sm font-semibold text-white">Details</h2>
-          <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {fields.map((field) => (
-              <div key={field.label}>
-                <dt className="text-xs uppercase tracking-wide text-slate-500">{field.label}</dt>
-                <dd className="mt-1 break-words text-sm text-slate-200">{field.value}</dd>
-              </div>
-            ))}
-          </dl>
+        <div className="space-y-6 lg:col-span-2">
+          <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+            <h2 className="mb-4 text-sm font-semibold text-white">Details</h2>
+            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {fields.map((field) => (
+                <div key={field.label}>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500">{field.label}</dt>
+                  <dd className="mt-1 break-words text-sm text-slate-200">{field.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-white">Verification</h2>
+              <button
+                type="button"
+                onClick={() => void run([documentId])}
+                disabled={isRunning}
+                className="flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-1.5 text-sm font-medium text-slate-200 transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <ShieldCheck className="h-4 w-4" />
+                {isRunning ? "Verifying…" : "Verify"}
+              </button>
+            </div>
+
+            {record.verificationResult ? (
+              <>
+                <p className="mb-4 text-xs text-slate-500">
+                  Last checked {formatDate(record.verificationResult.checkedAt)}
+                </p>
+
+                {record.verificationResult.message && (
+                  <p className="mb-4 text-sm text-amber-400">{record.verificationResult.message}</p>
+                )}
+
+                {record.verificationResult.expected && record.verificationResult.found && (
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[420px] text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-slate-800 text-xs uppercase tracking-wide text-slate-400">
+                          <th className="py-2 pr-4 font-medium">Field</th>
+                          <th className="py-2 pr-4 font-medium">Expected</th>
+                          <th className="py-2 font-medium">Found</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800">
+                        {VERIFICATION_FIELD_ORDER.map((field) => {
+                          const isMismatched = record.verificationResult?.mismatchedFields?.includes(field);
+                          return (
+                            <tr key={field}>
+                              <td className="py-2 pr-4 text-slate-400">
+                                {VERIFICATION_FIELD_LABELS[field]}
+                              </td>
+                              <td
+                                className={cn("py-2 pr-4", isMismatched ? "text-red-400" : "text-slate-200")}
+                              >
+                                {record.verificationResult?.expected?.[field] ?? "—"}
+                              </td>
+                              <td className={cn("py-2", isMismatched ? "text-red-400" : "text-slate-200")}>
+                                {record.verificationResult?.found?.[field] ?? "—"}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-slate-500">Not yet verified.</p>
+            )}
+          </div>
         </div>
 
         <div className="space-y-6">

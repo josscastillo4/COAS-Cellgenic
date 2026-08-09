@@ -21,10 +21,11 @@ const UPDATE_REQUIRED_OPTIONS: UpdateRequiredFilter[] = ["All", "Yes", "No"];
 
 const VERIFICATION_STATUS_OPTIONS: Array<VerificationStatus | "All"> = [
   "All",
-  "Verified",
-  "Mismatch",
-  "Outdated",
-  "Unverified",
+  "Pending verification",
+  "Verifying",
+  "Up to date",
+  "Update required",
+  "Verification failed",
 ];
 
 const selectClasses =

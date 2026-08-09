@@ -1,6 +1,7 @@
 import { slugify } from "@/lib/utils";
 import type { DocumentInput, ProductDocument } from "@/types/document";
 import type { ExcelColumnMapping, ImportRow, ImportSummary, ParsedWorkbook } from "@/types/import";
+import type { RowQrMap } from "@/services/xlsxImageService";
 
 /**
  * Excel Import parsing/mapping/validation — pure functions, no persistence.
@@ -19,6 +20,7 @@ const COLUMN_ALIASES: Record<keyof ExcelColumnMapping, string[]> = {
   lotNumber: ["LOT Number", "Lot Number", "LOT", "Lot #"],
   qrUrl: ["QR", "QR URL", "QR Code"],
   updateRequired: ["ACTUALIZAR PDF", "Update Required"],
+  mg: ["Gramaje", "MG", "Gramaje / MG", "Gramaje/MG"],
 };
 
 const TRUE_TOKENS = new Set(["SI", "S", "YES", "Y", "TRUE", "1"]);
@@ -77,6 +79,7 @@ export function detectColumnMapping(headers: string[]): ExcelColumnMapping {
     lotNumber: findMatch(COLUMN_ALIASES.lotNumber),
     qrUrl: findMatch(COLUMN_ALIASES.qrUrl),
     updateRequired: findMatch(COLUMN_ALIASES.updateRequired),
+    mg: findMatch(COLUMN_ALIASES.mg),
   };
 }
 
@@ -126,11 +129,17 @@ function isValidUrl(value: string): boolean {
  * field meant to be globally unique — one URL resolves to one document/QR).
  * Runs across the full dataset, not just the previewed slice. Duplicate
  * checking only runs on rows that already passed field validation.
+ *
+ * `rowQrMap` (0-indexed worksheet row -> decoded QR URL, from
+ * xlsxImageService.extractRowQrMap) takes priority over the text QR column
+ * when both are present for a row — the embedded image is the real QR data;
+ * the text column is a fallback for files that don't have one.
  */
 export function buildImportRows(
   rows: Record<string, unknown>[],
   mapping: ExcelColumnMapping,
-  existingDocuments: ProductDocument[]
+  existingDocuments: ProductDocument[],
+  rowQrMap?: RowQrMap
 ): ImportRow[] {
   const existingUrls = new Set(
     existingDocuments
@@ -161,7 +170,13 @@ export function buildImportRows(
     const lotNumber = cellToString(mapping.lotNumber ? row[mapping.lotNumber] : undefined);
     if (!lotNumber) errors.push("Missing Lot Number");
 
-    const qrUrl = cellToString(mapping.qrUrl ? row[mapping.qrUrl] : undefined);
+    // Data rows start at worksheet row 1 (row 0 is the header) — matches the
+    // 0-indexed row numbers used in <xdr:from><xdr:row> anchors.
+    const qrFromImage = rowQrMap?.get(index + 1);
+    const qrFromText = cellToString(mapping.qrUrl ? row[mapping.qrUrl] : undefined);
+    const qrUrl = qrFromImage || qrFromText;
+
+    const mg = cellToString(mapping.mg ? row[mapping.mg] : undefined);
 
     const {
       parsed: updateRequired,
@@ -176,12 +191,13 @@ export function buildImportRows(
       name,
       type: "COA",
       status: "Draft",
-      verificationStatus: "Unverified",
+      verificationStatus: "Pending verification",
       publicUrl: publicUrl || undefined,
       slug: name ? slugify(name) : undefined,
       publishedYear: publishedYear ?? undefined,
       lotNumber: lotNumber || undefined,
       qrUrl: qrUrl || undefined,
+      mg: mg || undefined,
       updateRequired: updateRequired ?? false,
     };
 

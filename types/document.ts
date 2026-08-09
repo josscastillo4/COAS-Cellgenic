@@ -9,13 +9,49 @@ export type DocumentType = "COA" | "MSDS" | "IFU" | "Brochure" | "Package Insert
 export type DocumentStatus = "Active" | "Archived" | "Draft";
 
 /**
- * Whether the currently published PDF matches what this QR/document should
- * show. Distinct from `updateRequired` (which just flags "something needs
- * attention" without saying why) and from `status` (lifecycle state).
- * - "Mismatch": the QR/public URL currently serves the WRONG PDF.
- * - "Outdated": the PDF is correct but a newer version has been released.
+ * Real, automatically-calculated verification state — never manually
+ * assigned. Distinct from `updateRequired` (the raw Excel SI/NO flag — what
+ * Marketing flagged, not what we've actually checked) and from `status`
+ * (Active/Archived/Draft lifecycle).
+ * - "Pending verification": imported/reset, not yet checked.
+ * - "Verifying": a batch/manual verification run is checking it right now.
+ * - "Up to date": checked — the live PDF matches the expected Excel data.
+ * - "Update required": checked — the live PDF was found but doesn't match.
+ * - "Verification failed": could not complete the check (see
+ *   verificationResult.message for why — unreachable URL, no PDF found, or
+ *   the PDF couldn't be parsed). Never conflated with "Up to date".
  */
-export type VerificationStatus = "Verified" | "Mismatch" | "Outdated" | "Unverified";
+export type VerificationStatus =
+  | "Pending verification"
+  | "Verifying"
+  | "Up to date"
+  | "Update required"
+  | "Verification failed";
+
+/** Snapshot of the fields verification compares, used for both `expected` and `found`. */
+export interface VerificationFieldSnapshot {
+  name?: string;
+  publishedYear?: number;
+  lotNumber?: string;
+  mg?: string;
+}
+
+/**
+ * Structured "why" behind the current verificationStatus, so a mismatch is
+ * never just a status pill with no explanation.
+ */
+export interface VerificationResult {
+  /** ISO date string for when this check ran. */
+  checkedAt: string;
+  outcome: "matched" | "mismatch" | "unreachable" | "pdf_not_found" | "pdf_unreadable";
+  /** The PDF URL actually discovered on the WordPress page — may differ from the stored pdfUrl. */
+  foundPdfUrl?: string;
+  expected?: VerificationFieldSnapshot;
+  found?: VerificationFieldSnapshot;
+  mismatchedFields?: Array<keyof VerificationFieldSnapshot>;
+  /** Human-readable detail, mainly for the unreachable/pdf_not_found/pdf_unreadable outcomes. */
+  message?: string;
+}
 
 /** One prior PDF that was replaced, kept for audit history. */
 export interface PdfHistoryEntry {
@@ -61,9 +97,12 @@ export interface ProductDocument {
   updateRequired?: boolean;
   /** The currently published PDF. Change this only via the Replace PDF flow so history is recorded. */
   pdfUrl?: string;
+  /** "Gramaje / MG" — compared against the PDF during verification, alongside name/year/lot. */
+  mg?: string;
 
   // PDF verification & replacement audit
   verificationStatus?: VerificationStatus;
+  verificationResult?: VerificationResult;
   pdfHistory?: PdfHistoryEntry[];
 }
 

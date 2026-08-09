@@ -29,6 +29,11 @@ export function addDocuments(
   return [...documents, ...newDocuments];
 }
 
+export function deleteDocuments(documents: ProductDocument[], ids: string[]): ProductDocument[] {
+  const idsToRemove = new Set(ids);
+  return documents.filter((doc) => !idsToRemove.has(doc.id));
+}
+
 export function updateDocument(
   documents: ProductDocument[],
   id: string,
@@ -44,6 +49,10 @@ export function updateDocument(
  * Replaces a document's PDF while preserving the QR/public URL contract:
  * qrUrl and publicUrl are never part of this operation's payload, so they
  * cannot change here. The previous pdfUrl is archived into pdfHistory.
+ *
+ * This only updates *our* record — it doesn't confirm what's actually live
+ * on WordPress, so verificationStatus resets to "Pending verification"
+ * (never optimistically "Up to date") to prompt a real re-check.
  */
 export function replacePdf(
   documents: ProductDocument[],
@@ -64,7 +73,8 @@ export function replacePdf(
       ...doc,
       pdfUrl: newPdfUrl,
       pdfHistory: history,
-      verificationStatus: "Verified",
+      verificationStatus: "Pending verification",
+      verificationResult: undefined,
       updateRequired: false,
       updatedAt: now,
     };

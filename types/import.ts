@@ -12,8 +12,9 @@ export interface ExcelColumnMapping {
   publicUrl: string | null; // "Link"
   datePublished: string | null; // "Date Published"
   lotNumber: string | null; // "LOT Number"
-  qrUrl: string | null; // "QR"
+  qrUrl: string | null; // "QR" — text-column fallback; embedded QR images take priority when present
   updateRequired: string | null; // "ACTUALIZAR PDF"
+  mg: string | null; // "Gramaje" / "MG" — optional, not required to complete mapping
 }
 
 export type ImportRowStatus = "valid" | "invalid" | "duplicate";

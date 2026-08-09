@@ -15,6 +15,7 @@ import {
   parseWorkbook,
   summarize,
 } from "@/services/excelImportService";
+import { extractRowQrMap, type RowQrMap } from "@/services/xlsxImageService";
 import type { ExcelColumnMapping, ImportRow, ImportSummary, ParsedWorkbook } from "@/types/import";
 
 type WizardStep = "select" | "mapping" | "preview" | "summary";
@@ -46,6 +47,7 @@ export default function ImportDocumentsPage() {
   const [fileError, setFileError] = useState<string | null>(null);
   const [isParsing, setIsParsing] = useState(false);
   const [parsed, setParsed] = useState<ParsedWorkbook | null>(null);
+  const [rowQrMap, setRowQrMap] = useState<RowQrMap | undefined>(undefined);
   const [mapping, setMapping] = useState<ExcelColumnMapping | null>(null);
   const [importRows, setImportRows] = useState<ImportRow[] | null>(null);
   const [summary, setSummary] = useState<ImportSummary | null>(null);
@@ -69,12 +71,13 @@ export default function ImportDocumentsPage() {
     setIsParsing(true);
 
     try {
-      const workbook = await parseWorkbook(file);
+      const [workbook, qrMap] = await Promise.all([parseWorkbook(file), extractRowQrMap(file)]);
       if (workbook.rows.length === 0) {
         setFileError("This file has no data rows to import.");
         return;
       }
       setParsed(workbook);
+      setRowQrMap(qrMap);
       setMapping(detectColumnMapping(workbook.headers));
       setStep("mapping");
     } catch {
@@ -86,7 +89,7 @@ export default function ImportDocumentsPage() {
 
   function handleContinueToPreview() {
     if (!parsed || !mapping) return;
-    const rows = buildImportRows(parsed.rows, mapping, documents);
+    const rows = buildImportRows(parsed.rows, mapping, documents, rowQrMap);
     setImportRows(rows);
     setSummary(summarize(rows));
     setStep("preview");
@@ -109,6 +112,7 @@ export default function ImportDocumentsPage() {
     setFileName(null);
     setFileError(null);
     setParsed(null);
+    setRowQrMap(undefined);
     setMapping(null);
     setImportRows(null);
     setSummary(null);
