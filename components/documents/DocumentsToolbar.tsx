@@ -1,31 +1,30 @@
 "use client";
 
 import { Search } from "lucide-react";
-import type { DocumentStatus, DocumentType } from "@/types/document";
+import type { VerificationStatus } from "@/types/document";
+
+export type UpdateRequiredFilter = "All" | "Yes" | "No";
 
 interface DocumentsToolbarProps {
   searchValue: string;
   onSearchChange: (value: string) => void;
-  typeValue: DocumentType | "All";
-  onTypeChange: (value: DocumentType | "All") => void;
-  statusValue: DocumentStatus | "All";
-  onStatusChange: (value: DocumentStatus | "All") => void;
+  publishedYearValue: number | "All";
+  onPublishedYearChange: (value: number | "All") => void;
+  publishedYears: number[];
+  updateRequiredValue: UpdateRequiredFilter;
+  onUpdateRequiredChange: (value: UpdateRequiredFilter) => void;
+  verificationStatusValue: VerificationStatus | "All";
+  onVerificationStatusChange: (value: VerificationStatus | "All") => void;
 }
 
-const DOCUMENT_TYPES: Array<DocumentType | "All"> = [
-  "All",
-  "COA",
-  "MSDS",
-  "IFU",
-  "Brochure",
-  "Package Insert",
-];
+const UPDATE_REQUIRED_OPTIONS: UpdateRequiredFilter[] = ["All", "Yes", "No"];
 
-const DOCUMENT_STATUSES: Array<DocumentStatus | "All"> = [
+const VERIFICATION_STATUS_OPTIONS: Array<VerificationStatus | "All"> = [
   "All",
-  "Active",
-  "Archived",
-  "Draft",
+  "Verified",
+  "Mismatch",
+  "Outdated",
+  "Unverified",
 ];
 
 const selectClasses =
@@ -39,46 +38,67 @@ const selectClasses =
 export default function DocumentsToolbar({
   searchValue,
   onSearchChange,
-  typeValue,
-  onTypeChange,
-  statusValue,
-  onStatusChange,
+  publishedYearValue,
+  onPublishedYearChange,
+  publishedYears,
+  updateRequiredValue,
+  onUpdateRequiredChange,
+  verificationStatusValue,
+  onVerificationStatusChange,
 }: DocumentsToolbarProps) {
   return (
-    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-      <div className="relative flex-1">
+    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+      <div className="relative flex-1 sm:min-w-[240px]">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
         <input
           type="text"
           value={searchValue}
           onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Search documents, products..."
+          placeholder="Search by COA name or lot number..."
           className="w-full rounded-lg border border-slate-800 bg-slate-900 py-2 pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
         />
       </div>
 
       <select
-        value={typeValue}
-        onChange={(event) => onTypeChange(event.target.value as DocumentType | "All")}
+        value={publishedYearValue}
+        onChange={(event) =>
+          onPublishedYearChange(event.target.value === "All" ? "All" : Number(event.target.value))
+        }
         className={selectClasses}
-        aria-label="Filter by document type"
+        aria-label="Filter by published year"
       >
-        {DOCUMENT_TYPES.map((type) => (
-          <option key={type} value={type}>
-            {type === "All" ? "All Types" : type}
+        <option value="All">All Years</option>
+        {publishedYears.map((year) => (
+          <option key={year} value={year}>
+            {year}
           </option>
         ))}
       </select>
 
       <select
-        value={statusValue}
-        onChange={(event) => onStatusChange(event.target.value as DocumentStatus | "All")}
+        value={updateRequiredValue}
+        onChange={(event) => onUpdateRequiredChange(event.target.value as UpdateRequiredFilter)}
         className={selectClasses}
-        aria-label="Filter by status"
+        aria-label="Filter by update required"
       >
-        {DOCUMENT_STATUSES.map((status) => (
-          <option key={status} value={status}>
-            {status === "All" ? "All Statuses" : status}
+        {UPDATE_REQUIRED_OPTIONS.map((option) => (
+          <option key={option} value={option}>
+            {option === "All" ? "All (Update Required)" : option === "Yes" ? "Update required" : "Up to date"}
+          </option>
+        ))}
+      </select>
+
+      <select
+        value={verificationStatusValue}
+        onChange={(event) =>
+          onVerificationStatusChange(event.target.value as VerificationStatus | "All")
+        }
+        className={selectClasses}
+        aria-label="Filter by verification status"
+      >
+        {VERIFICATION_STATUS_OPTIONS.map((option) => (
+          <option key={option} value={option}>
+            {option === "All" ? "All Verification Statuses" : option}
           </option>
         ))}
       </select>

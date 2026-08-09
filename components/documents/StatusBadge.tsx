@@ -1,31 +1,21 @@
 import type { DocumentStatus } from "@/types/document";
-import { cn } from "@/lib/utils";
+import Badge, { type BadgeTone } from "@/components/documents/Badge";
 
 interface StatusBadgeProps {
   status: DocumentStatus;
 }
 
 /**
- * Small color-coded pill for a document's status.
- * Centralizing the color map here means every table/card that shows a
- * status stays visually consistent, and the palette only has to be tuned
- * in one place.
+ * Pill for a document's lifecycle status (Active/Archived/Draft).
+ * Independent of updateRequired/verificationStatus — this only reflects
+ * whether the document is published, archived, or still a draft.
  */
-const STATUS_STYLES: Record<DocumentStatus, string> = {
-  Active: "bg-emerald-500/10 text-emerald-400 ring-1 ring-inset ring-emerald-500/20",
-  Archived: "bg-slate-500/10 text-slate-400 ring-1 ring-inset ring-slate-500/20",
-  Draft: "bg-amber-500/10 text-amber-400 ring-1 ring-inset ring-amber-500/20",
+const STATUS_TONE: Record<DocumentStatus, BadgeTone> = {
+  Active: "success",
+  Archived: "neutral",
+  Draft: "warning",
 };
 
 export default function StatusBadge({ status }: StatusBadgeProps) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
-        STATUS_STYLES[status]
-      )}
-    >
-      {status}
-    </span>
-  );
+  return <Badge tone={STATUS_TONE[status]} label={status} />;
 }

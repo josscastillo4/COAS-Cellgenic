@@ -122,16 +122,26 @@ Products
 Documents
 
 - id
-- product_id
-- title
-- type
-- version
-- language
-- storage_url
-- wordpress_slug
-- public_url
-- status
-- updated_at
+- name (Document Name)
+- type (COA | MSDS | IFU | Brochure | Package Insert — defaults to COA for
+  Excel-imported records)
+- status (Active | Archived | Draft — lifecycle state)
+- product (optional — not supplied by the Excel import)
+- version (optional — not supplied by the Excel import)
+- publicUrl (stable public URL — the QR code must keep resolving here)
+- slug
+- publishedYear
+- lotNumber
+- qrUrl (URL the QR code redirects to — stays stable across PDF replacements)
+- updateRequired (raw "ACTUALIZAR PDF" SI/NO flag — needs attention, doesn't
+  say why)
+- pdfUrl (currently published PDF — only changed via the Replace PDF flow)
+- verificationStatus (Verified | Mismatch | Outdated | Unverified — whether
+  the currently published PDF matches the QR/document; distinct from
+  updateRequired)
+- pdfHistory (prior pdfUrl values, for replacement auditing)
+- createdAt
+- updatedAt
 
 Users
 
